@@ -8,11 +8,9 @@ fn generate_weights(input_size: usize, output_size: usize) -> DMatrix<f64> {
     let normal = Normal::new(0.0, 1.0).unwrap();
     let mut rng = thread_rng();
     let mut weights = DMatrix::zeros(input_size, output_size);
-    weights.row_iter_mut().for_each(|mut row| {
-        row.iter_mut().for_each(|element| {
-            *element = normal.sample(&mut rng) * scale;
-        });
-    });
+    weights
+        .iter_mut()
+        .for_each(|element| *element = normal.sample(&mut rng) * scale);
     weights
 }
 
@@ -63,7 +61,9 @@ impl FullyConnected<'_> {
     /// Args:
     ///
     /// x: Numerical values of the data (Tensor)
-    pub fn forward(x: DMatrix<f64>) {}
+    pub fn forward(self, x: DMatrix<f64>) -> DMatrix<f64> {
+        unimplemented!("Forward pass is not yet implemented")
+    }
 
     /// Backpropagation
     ///
@@ -74,5 +74,7 @@ impl FullyConnected<'_> {
     /// learning_rate: Learning rate for gradient descent
     ///
     /// t: Timestep
-    pub fn backward(d_values: f64, learning_rate: f64, t: i32) {}
+    pub fn backward(self, d_values: f64, learning_rate: f64, t: i32) -> DMatrix<f64> {
+        unimplemented!("Backward pass is not yet implemented")
+    }
 }
