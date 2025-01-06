@@ -21,7 +21,7 @@ impl NeuralNetwork<'_> {
         }
     }
 
-    fn forward(self, inputs: DMatrix<f64>) -> DMatrix<f64> {
+    fn forward(&mut self, inputs: DMatrix<f64>) -> DMatrix<f64> {
         let layer1_output = self.layer_1.forward(inputs);
         let layer2_output = self.layer_2.forward(layer1_output);
         let layer3_output = self.layer_3.forward(layer2_output);
