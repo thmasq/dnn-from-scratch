@@ -17,7 +17,7 @@ fn generate_weights(input_size: usize, output_size: usize) -> DMatrix<f64> {
 pub struct FullyConnected<'a> {
     // Weights and biases
     weights: DMatrix<f64>,
-    biases: DMatrix<f64>,
+    biases: RowDVector<f64>,
     // Activation-related
     activation: &'a str,
     // Optimizer-related (Adam)
@@ -47,7 +47,7 @@ impl FullyConnected<'_> {
     pub fn new<'a>(input_size: usize, output_size: usize, activation: &'a str) -> FullyConnected {
         FullyConnected {
             weights: generate_weights(input_size, output_size),
-            biases: DMatrix::zeros(1, input_size),
+            biases: RowDVector::zeros(input_size),
             activation: &activation,
             m_weights: DMatrix::zeros(input_size, output_size),
             v_weights: DMatrix::zeros(input_size, output_size),
@@ -56,8 +56,8 @@ impl FullyConnected<'_> {
             beta_1: 0.9,
             beta_2: 0.999,
             epsilon: 1e-8,
-            input: DMatrix::zeros(input_size, output_size),
-            output: DMatrix::zeros(input_size, output_size),
+            input: DMatrix::zeros(1, 1),
+            output: DMatrix::zeros(1, 1),
         }
     }
 
@@ -68,7 +68,8 @@ impl FullyConnected<'_> {
     /// x: Numerical values of the data (Tensor)
     pub fn forward(&mut self, x: DMatrix<f64>) -> DMatrix<f64> {
         self.input = x.clone();
-        let z = &self.input * &self.weights + &self.biases;
+        let mut z = &self.input * &self.weights;
+        z.row_iter_mut().for_each(|mut row| row += &self.biases);
         match self.activation {
             "relu" => {
                 self.output = z.map(|v| if v > 0.0 { v } else { 0.0 });
@@ -80,7 +81,6 @@ impl FullyConnected<'_> {
                 panic!("Invalid activation function passed. Use either relu or softmax.")
             }
         }
-
         self.output.clone()
     }
 
@@ -98,15 +98,6 @@ impl FullyConnected<'_> {
         // Calculate the derivative of the activation function
         if self.activation == "softmax" {
             unimplemented!("softmax not yet implemented.")
-            // for i in 0..d_values.nrows() {
-            //     let gradient = d_values.row(i).transpose();
-            //     let jacobian_matrix =
-            //         DMatrix::from_diagonal(&gradient) - gradient.clone() * gradient.transpose();
-            //     d_values.set_row(
-            //         i,
-            //         &(jacobian_matrix * self.output.row(i).transpose()).transpose(),
-            //     );
-            // }
         } else if self.activation == "relu" {
             d_values.component_mul_assign(&self.output.map(|x| if x > 0.0 { 1.0 } else { 0.0 }));
         }
