@@ -41,7 +41,17 @@ impl NeuralNetwork<'_> {
     }
 
     fn categorical_cross_entropy(&self, output: &Array2<f64>, target: &Array2<f64>) -> f64 {
-        unimplemented!("Categorical Cross-Entropy not yet implemented.")
+        let mut total_sum = 0.;
+        let mut total_elements = 0.;
+        const EPSILON: f64 = 1e-10;
+        output
+            .iter()
+            .zip(target.iter())
+            .for_each(|(predicted, expected)| {
+                total_sum += *expected * f64::ln(*expected + EPSILON);
+                total_elements += 1.;
+            });
+        total_sum / total_elements
     }
 
     fn argmax(&self, array: &Array2<f64>, axis: usize) -> Array1<usize> {
