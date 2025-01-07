@@ -7,3 +7,7 @@ edition = "2021"
 nalgebra = "0.33.2"
 rand = "0.8.5"
 rand_distr = "0.4.3"
+polars = { version = "0.44.2", features = ["polars-io", "ndarray"] }
+ndarray = "0.16.1"
+nshare = "0.10.0"
+
