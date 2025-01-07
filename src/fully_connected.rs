@@ -109,8 +109,7 @@ impl FullyConnected<'_> {
             }
         }
         // Calculate the derivative with respect to weights and biases
-        let d_weights = self.output.t().dot(&d_values);
-        println!("{:?} {:?}", self.output.shape(), d_weights.shape());
+        let d_weights = self.input.t().dot(&d_values);
         let d_biases = d_values.sum_axis(Axis(0));
         // Clip derivatives to avoid extreme values
         let d_weights_clipped = d_weights.mapv(|x| x.max(-1.).min(1.));
@@ -118,13 +117,7 @@ impl FullyConnected<'_> {
         // Calculate gradient with respect to the input
         let d_inputs = d_values.dot(&self.weights.t());
         // Update weights and biases using gradient descent
-        println!(
-            "{:?} {:?}",
-            self.weights.shape(),
-            (&d_weights_clipped * learning_rate).shape()
-        );
         self.weights -= &(&d_weights_clipped * learning_rate);
-        println!("ok");
         self.biases -= &(&d_biases_clipped * learning_rate);
         // Adam optimizer for weights
         self.m_weights =

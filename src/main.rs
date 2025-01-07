@@ -18,7 +18,7 @@ use std::env;
 
 fn main() {
     // Debug env var, uncomment if necessary
-    // env::set_var("RUST_BACKTRACE", "1");
+    env::set_var("RUST_BACKTRACE", "full");
 
     // Project constants
     const INPUT_SIZE: usize = 784;
@@ -26,7 +26,7 @@ fn main() {
     const HIDDEN_SIZES: [usize; 2] = [512, 512];
     // Main routine
     let (x_train, y_train, x_test, y_test) =
-        dataset_handler::load_rssi_dataset("assets/rssi-dataset.csv", 0.10);
+        dataset_handler::load_rssi_dataset("assets/rssi/rssi-dataset.csv", 0.10);
     println!(
         "RSSI dataset shapes: {:?} {:?} {:?} {:?}",
         x_train.shape(),
