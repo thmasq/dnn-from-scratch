@@ -1,5 +1,4 @@
-use nd::{s, Array2, Array3, ArrayD};
-use ndarray::{Array, ArrayBase, Axis, Dimension, Ix1, Ix2, Ix3};
+use nd::{s, Array3, ArrayBase, ArrayD, Axis, Dimension, Ix3};
 use npy::ReadNpyExt;
 use polars::prelude::*;
 use std::fs::File;
