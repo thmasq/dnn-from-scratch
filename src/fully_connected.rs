@@ -37,12 +37,12 @@ impl FullyConnected<'_> {
     pub fn new<'a>(input_size: usize, output_size: usize, activation: &'a str) -> FullyConnected {
         FullyConnected {
             weights: generate_weights(input_size, output_size),
-            biases: Array1::zeros(input_size),
+            biases: Array1::zeros(output_size),
             activation,
             m_weights: Array2::zeros((input_size, output_size)),
             v_weights: Array2::zeros((input_size, output_size)),
-            m_biases: Array1::zeros(input_size),
-            v_biases: Array1::zeros(input_size),
+            m_biases: Array1::zeros(output_size),
+            v_biases: Array1::zeros(output_size),
             beta_1: 0.9,
             beta_2: 0.999,
             epsilon: 1e-8,
