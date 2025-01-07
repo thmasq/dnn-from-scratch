@@ -71,7 +71,7 @@ impl FullyConnected<'_> {
                     z_max = if z_max < v { v } else { z_max };
                 });
                 let exp_values = z.mapv(|v| (v - z_max).exp());
-                let exp_values_sum = exp_values.sum();
+                let exp_values_sum = exp_values.sum() + self.epsilon;
                 self.output = exp_values / exp_values_sum;
             }
             _ => {
@@ -128,7 +128,7 @@ impl FullyConnected<'_> {
         let v_hat_weights = &self.v_weights / (1. - self.beta_2.powi(t as i32));
         self.weights -=
             &(learning_rate * &m_hat_weights / &v_hat_weights.mapv(|x| x.sqrt() + self.epsilon));
-        // Adam oxtimizer for biases
+        // Adam optimizer for biases
         self.m_biases = &(&self.m_biases * self.beta_1) + &(&d_biases_clipped * (1. - self.beta_1));
         self.v_biases = &(&self.v_biases * self.beta_2)
             + &(&d_biases_clipped.mapv(|x| x * x) * (1. - self.beta_2));

@@ -115,7 +115,7 @@ impl NeuralNetwork<'_> {
         let mut losses = Vec::new();
         let mut accuracies = Vec::new();
         let mut learning_rate;
-        for epoch in 0..n_epochs {
+        for epoch in 1..=n_epochs {
             let output = self.forward(&x_train);
             let loss = self.categorical_cross_entropy(&output, &y_train);
             let predicted_labels = self.argmax(&output, 1);

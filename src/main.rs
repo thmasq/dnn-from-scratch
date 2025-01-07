@@ -18,7 +18,7 @@ use std::env;
 
 fn main() {
     // Debug env var, uncomment if necessary
-    env::set_var("RUST_BACKTRACE", "full");
+    // env::set_var("RUST_BACKTRACE", "full");
 
     // Project constants
     const INPUT_SIZE: usize = 784;
