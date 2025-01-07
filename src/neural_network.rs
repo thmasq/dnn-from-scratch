@@ -33,9 +33,11 @@ impl NeuralNetwork<'_> {
     /// then the loss and accuracy are calculated,
     /// after that the backpropagation is done.
     pub fn train(
-        self,
-        inputs: DMatrix<f64>,
-        targets: DMatrix<f64>,
+        &self,
+        x_train: DMatrix<f64>, // inputs
+        y_train: DMatrix<f64>, //targets
+        x_test: DMatrix<f64>,
+        y_test: DMatrix<f64>,
         n_epochs: u32,
         initial_learning_rate: f32,
         decay: f32,
@@ -45,7 +47,7 @@ impl NeuralNetwork<'_> {
 
     /// This function will plot Loss over Epochs
     /// and Accuracy over Epochs.
-    pub fn plot(self) {
+    pub fn plot(&self) {
         unimplemented!("Plot function is not yet implemented")
     }
 }
