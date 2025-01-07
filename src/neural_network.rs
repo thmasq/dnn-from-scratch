@@ -1,4 +1,4 @@
-use nd::{s, Array2, Array3, Axis};
+use nd::{s, Array1, Array2, Array3, Axis};
 
 use crate::fully_connected::FullyConnected;
 
@@ -17,57 +17,34 @@ impl NeuralNetwork<'_> {
         NeuralNetwork {
             layer_1: FullyConnected::new(input_size, hidden_sizes[0], "relu"),
             layer_2: FullyConnected::new(hidden_sizes[0], hidden_sizes[1], "relu"),
-            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "softmax"),
+            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "relu"), // Change to softmax after implementation
         }
     }
 
-    fn forward(&mut self, inputs: &Array3<f64>) -> Array3<f64> {
-        let shape = (inputs.shape()[0], inputs.shape()[1], inputs.shape()[2]);
-        let mut output = Array3::zeros(shape);
-        inputs.axis_iter(Axis(0)).enumerate().for_each(|(i, row)| {
-            let layer1_output = self.layer_1.forward(row.to_owned());
-            let layer2_output = self.layer_2.forward(layer1_output);
-            let layer3_output = self.layer_3.forward(layer2_output);
-            output.slice_mut(s![i, .., ..]).assign(&layer3_output);
-        });
-        output
+    fn forward(&mut self, inputs: &Array2<f64>) -> Array2<f64> {
+        let layer1_output = self.layer_1.forward(inputs.to_owned());
+        let layer2_output = self.layer_2.forward(layer1_output);
+        let layer3_output = self.layer_3.forward(layer2_output);
+        layer3_output
     }
 
-    fn backward(
-        &mut self,
-        gradient: &Array3<f64>,
-        learning_rate: f64,
-        time_step: u32,
-    ) -> Array3<f64> {
-        let shape = (
-            gradient.shape()[0],
-            gradient.shape()[1],
-            gradient.shape()[2],
-        );
-        let mut output = Array3::zeros(shape);
-        gradient
-            .axis_iter(Axis(0))
-            .enumerate()
-            .for_each(|(i, row)| {
-                let layer3_output = self
-                    .layer_3
-                    .backward(row.to_owned(), learning_rate, time_step);
-                let layer2_output = self
-                    .layer_2
-                    .backward(layer3_output, learning_rate, time_step);
-                let layer1_output = self
-                    .layer_1
-                    .backward(layer2_output, learning_rate, time_step);
-                output.slice_mut(s![i, .., ..]).assign(&layer1_output);
-            });
-        output
+    fn backward(&mut self, gradient: &Array2<f64>, learning_rate: f64, time_step: u32) {
+        let layer3_output = self
+            .layer_3
+            .backward(gradient.to_owned(), learning_rate, time_step);
+        let layer2_output = self
+            .layer_2
+            .backward(layer3_output, learning_rate, time_step);
+        let layer1_output = self
+            .layer_1
+            .backward(layer2_output, learning_rate, time_step);
     }
 
-    fn categorical_cross_entropy(&self, output: &Array3<f64>, target: &Array3<f64>) -> f64 {
+    fn categorical_cross_entropy(&self, output: &Array2<f64>, target: &Array2<f64>) -> f64 {
         unimplemented!("Categorical Cross-Entropy not yet implemented.")
     }
 
-    fn argmax(&self, array: &Array3<f64>, axis: usize) -> Array2<usize> {
+    fn argmax(&self, array: &Array2<f64>, axis: usize) -> Array1<usize> {
         let axis = Axis(axis);
         // Validate the axis value
         assert!(
@@ -87,7 +64,7 @@ impl NeuralNetwork<'_> {
         })
     }
 
-    fn compute_accuracy<T>(&self, output: &Array2<T>, target: &Array2<T>) -> f64
+    fn compute_accuracy<T>(&self, output: &Array1<T>, target: &Array1<T>) -> f64
     where
         T: Eq,
     {
@@ -111,10 +88,10 @@ impl NeuralNetwork<'_> {
     /// after that the backpropagation is done.
     pub fn train(
         &mut self,
-        x_train: Array3<f64>, // inputs
-        y_train: Array3<f64>, //targets
-        x_test: Array3<f64>,
-        y_test: Array3<f64>,
+        x_train: Array2<f64>, // inputs
+        y_train: Array2<f64>, //targets
+        x_test: Array2<f64>,
+        y_test: Array2<f64>,
         n_epochs: u32,
         initial_learning_rate: f64,
         decay: f64,
