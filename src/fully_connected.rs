@@ -53,7 +53,7 @@ impl FullyConnected<'_> {
 
     /// Forward pass
     pub fn forward(&mut self, x: Array2<f64>) -> Array2<f64> {
-        self.input = x.clone();
+        self.input = x;
         let mut z = self.input.dot(&self.weights);
         // Add biases to each row
         for mut row in z.rows_mut() {
