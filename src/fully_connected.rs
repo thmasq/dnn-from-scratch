@@ -74,7 +74,7 @@ impl FullyConnected<'_> {
     }
 
     /// Backpropagation
-    pub fn backward(&mut self, d_values: Array2<f64>, learning_rate: f64, t: i32) -> Array2<f64> {
+    pub fn backward(&mut self, d_values: Array2<f64>, learning_rate: f64, t: u32) -> Array2<f64> {
         let mut d_values = d_values.clone();
         // Calculate the derivative of the activation function
         match self.activation {
@@ -104,8 +104,8 @@ impl FullyConnected<'_> {
             &(&self.m_weights * self.beta_1) + &(&d_weights_clipped * (1.0 - self.beta_1));
         self.v_weights = &(&self.v_weights * self.beta_2)
             + &(&d_weights_clipped.mapv(|x| x * x) * (1.0 - self.beta_2));
-        let m_hat_weights = &self.m_weights / (1.0 - self.beta_1.powi(t));
-        let v_hat_weights = &self.v_weights / (1.0 - self.beta_2.powi(t));
+        let m_hat_weights = &self.m_weights / (1.0 - self.beta_1.powi(t as i32));
+        let v_hat_weights = &self.v_weights / (1.0 - self.beta_2.powi(t as i32));
         self.weights -=
             &(learning_rate * &m_hat_weights / &v_hat_weights.mapv(|x| x.sqrt() + self.epsilon));
         // Adam oxtimizer for biases
@@ -113,8 +113,8 @@ impl FullyConnected<'_> {
             &(&self.m_biases * self.beta_1) + &(&d_biases_clipped * (1.0 - self.beta_1));
         self.v_biases = &(&self.v_biases * self.beta_2)
             + &(&d_biases_clipped.mapv(|x| x * x) * (1.0 - self.beta_2));
-        let m_hat_biases = &self.m_biases / (1.0 - self.beta_1.powi(t));
-        let v_hat_biases = &self.v_biases / (1.0 - self.beta_2.powi(t));
+        let m_hat_biases = &self.m_biases / (1.0 - self.beta_1.powi(t as i32));
+        let v_hat_biases = &self.v_biases / (1.0 - self.beta_2.powi(t as i32));
         self.biases -=
             &(learning_rate * &m_hat_biases / &v_hat_biases.mapv(|x| x.sqrt() + self.epsilon));
         d_inputs

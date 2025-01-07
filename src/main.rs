@@ -43,7 +43,8 @@ fn main() {
         y_test.shape()
     );
     // NN-related (not yet implemented)
-    let neural_network = neural_network::NeuralNetwork::new(INPUT_SIZE, OUTPUT_SIZE, HIDDEN_SIZES);
+    let mut neural_network =
+        neural_network::NeuralNetwork::new(INPUT_SIZE, OUTPUT_SIZE, HIDDEN_SIZES);
     neural_network.train(x_train, y_train, x_test, y_test, 100, 0.001, 0.001);
     // neural_network.plot();
 
