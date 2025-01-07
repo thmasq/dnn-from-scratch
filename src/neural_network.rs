@@ -17,7 +17,7 @@ impl NeuralNetwork<'_> {
         NeuralNetwork {
             layer_1: FullyConnected::new(input_size, hidden_sizes[0], "relu"),
             layer_2: FullyConnected::new(hidden_sizes[0], hidden_sizes[1], "relu"),
-            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "relu"), // Change to softmax after implementation
+            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "softmax"),
         }
     }
 
@@ -29,15 +29,15 @@ impl NeuralNetwork<'_> {
     }
 
     fn backward(&mut self, gradient: &Array2<f64>, learning_rate: f64, time_step: u32) {
-        let layer3_output = self
+        let layer3_gradient = self
             .layer_3
             .backward(gradient.to_owned(), learning_rate, time_step);
-        let layer2_output = self
+        let layer2_gradient = self
             .layer_2
-            .backward(layer3_output, learning_rate, time_step);
-        let layer1_output = self
+            .backward(layer3_gradient, learning_rate, time_step);
+        let layer1_gradient = self
             .layer_1
-            .backward(layer2_output, learning_rate, time_step);
+            .backward(layer2_gradient, learning_rate, time_step);
     }
 
     fn categorical_cross_entropy(&self, output: &Array2<f64>, target: &Array2<f64>) -> f64 {

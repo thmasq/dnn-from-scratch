@@ -1,11 +1,13 @@
+use core::f64;
+
 use ndarray::{Array1, Array2, Axis};
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal};
 
 /// Generate weights following the HE-Initialization method
 fn generate_weights(input_size: usize, output_size: usize) -> Array2<f64> {
-    let scale = (2.0 / input_size as f64).sqrt();
-    let normal = Normal::new(0.0, 1.0).unwrap();
+    let scale = (2. / input_size as f64).sqrt();
+    let normal = Normal::new(0., 1.).unwrap();
     let mut rng = thread_rng();
     Array2::from_shape_fn((input_size, output_size), |_| {
         normal.sample(&mut rng) * scale
@@ -61,10 +63,16 @@ impl FullyConnected<'_> {
         }
         match self.activation {
             "relu" => {
-                self.output = z.mapv(|v| v.max(0.0));
+                self.output = z.mapv(|v| v.max(0.));
             }
             "softmax" => {
-                unimplemented!("softmax not yet implemented.")
+                let mut z_max = f64::NEG_INFINITY;
+                z.iter().for_each(|&v| {
+                    z_max = if z_max < v { v } else { z_max };
+                });
+                let exp_values = z.mapv(|v| (v - z_max).exp());
+                let exp_values_sum = exp_values.sum();
+                self.output = exp_values / exp_values_sum;
             }
             _ => {
                 panic!("Invalid activation function passed. Use either relu or softmax.")
@@ -79,10 +87,22 @@ impl FullyConnected<'_> {
         // Calculate the derivative of the activation function
         match self.activation {
             "relu" => {
-                d_values *= &self.output.mapv(|x| if x > 0.0 { 1.0 } else { 0.0 });
+                d_values *= &self.output.mapv(|x| if x > 0. { 1. } else { 0. });
             }
             "softmax" => {
-                unimplemented!("softmax not yet implemented.")
+                for i in 0..d_values.nrows() {
+                    let gradient = d_values.row(i).to_owned();
+                    let diagonal = Array2::from_diag(&gradient);
+                    let outer_product = gradient
+                        .clone()
+                        .insert_axis(Axis(1))
+                        .dot(&gradient.clone().insert_axis(Axis(0)));
+                    let jacobian_matrix = diagonal - outer_product;
+                    let transformed_gradient =
+                        jacobian_matrix.dot(&self.output.row(i).to_owned().insert_axis(Axis(1)));
+                    let result = transformed_gradient.index_axis(Axis(1), 0);
+                    d_values.row_mut(i).assign(&result);
+                }
             }
             _ => {
                 panic!("Invalid activation function passed. Use either relu or softmax.")
@@ -90,31 +110,37 @@ impl FullyConnected<'_> {
         }
         // Calculate the derivative with respect to weights and biases
         let d_weights = self.output.t().dot(&d_values);
+        println!("{:?} {:?}", self.output.shape(), d_weights.shape());
         let d_biases = d_values.sum_axis(Axis(0));
         // Clip derivatives to avoid extreme values
-        let d_weights_clipped = d_weights.mapv(|x| x.max(-1.0).min(1.0));
-        let d_biases_clipped = d_biases.mapv(|x| x.max(-1.0).min(1.0));
+        let d_weights_clipped = d_weights.mapv(|x| x.max(-1.).min(1.));
+        let d_biases_clipped = d_biases.mapv(|x| x.max(-1.).min(1.));
         // Calculate gradient with respect to the input
         let d_inputs = d_values.dot(&self.weights.t());
         // Update weights and biases using gradient descent
+        println!(
+            "{:?} {:?}",
+            self.weights.shape(),
+            (&d_weights_clipped * learning_rate).shape()
+        );
         self.weights -= &(&d_weights_clipped * learning_rate);
+        println!("ok");
         self.biases -= &(&d_biases_clipped * learning_rate);
         // Adam optimizer for weights
         self.m_weights =
-            &(&self.m_weights * self.beta_1) + &(&d_weights_clipped * (1.0 - self.beta_1));
+            &(&self.m_weights * self.beta_1) + &(&d_weights_clipped * (1. - self.beta_1));
         self.v_weights = &(&self.v_weights * self.beta_2)
-            + &(&d_weights_clipped.mapv(|x| x * x) * (1.0 - self.beta_2));
-        let m_hat_weights = &self.m_weights / (1.0 - self.beta_1.powi(t as i32));
-        let v_hat_weights = &self.v_weights / (1.0 - self.beta_2.powi(t as i32));
+            + &(&d_weights_clipped.mapv(|x| x * x) * (1. - self.beta_2));
+        let m_hat_weights = &self.m_weights / (1. - self.beta_1.powi(t as i32));
+        let v_hat_weights = &self.v_weights / (1. - self.beta_2.powi(t as i32));
         self.weights -=
             &(learning_rate * &m_hat_weights / &v_hat_weights.mapv(|x| x.sqrt() + self.epsilon));
         // Adam oxtimizer for biases
-        self.m_biases =
-            &(&self.m_biases * self.beta_1) + &(&d_biases_clipped * (1.0 - self.beta_1));
+        self.m_biases = &(&self.m_biases * self.beta_1) + &(&d_biases_clipped * (1. - self.beta_1));
         self.v_biases = &(&self.v_biases * self.beta_2)
-            + &(&d_biases_clipped.mapv(|x| x * x) * (1.0 - self.beta_2));
-        let m_hat_biases = &self.m_biases / (1.0 - self.beta_1.powi(t as i32));
-        let v_hat_biases = &self.v_biases / (1.0 - self.beta_2.powi(t as i32));
+            + &(&d_biases_clipped.mapv(|x| x * x) * (1. - self.beta_2));
+        let m_hat_biases = &self.m_biases / (1. - self.beta_1.powi(t as i32));
+        let v_hat_biases = &self.v_biases / (1. - self.beta_2.powi(t as i32));
         self.biases -=
             &(learning_rate * &m_hat_biases / &v_hat_biases.mapv(|x| x.sqrt() + self.epsilon));
         d_inputs
