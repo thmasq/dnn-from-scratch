@@ -44,8 +44,8 @@ pub fn load_rssi_dataset(
 
 fn read_mnist_npy(path_to_npy: PathBuf) -> ArrayD<f64> {
     let reader = File::open(path_to_npy).expect("Failure when reading npy file.");
-    let array = ArrayD::<f64>::read_npy(reader).expect("Failure when parsing npy file.");
-    array
+    let array = ArrayD::<u8>::read_npy(reader).expect("Failure when parsing npy file.");
+    array.mapv(|v| v as f64)
 }
 
 pub fn load_mnist_dataset(
