@@ -1,6 +1,7 @@
 // Temporary
 #![allow(dead_code)]
 #![allow(unused_variables)]
+#![allow(unused_imports)]
 
 extern crate nalgebra as na;
 extern crate ndarray as nd;
