@@ -52,7 +52,7 @@ where
         1 => {
             // If it's 1D, add two axes to make it a 3D array
             array
-                .insert_axis(Axis(0))
+                .insert_axis(Axis(1))
                 .insert_axis(Axis(2))
                 .into_dimensionality::<Ix3>()
                 .unwrap()
@@ -60,7 +60,7 @@ where
         2 => {
             // If it's 2D, add one axis to make it a 3D array
             array
-                .insert_axis(Axis(0))
+                .insert_axis(Axis(2))
                 .into_dimensionality::<Ix3>()
                 .unwrap()
         }
