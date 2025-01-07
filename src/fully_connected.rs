@@ -96,10 +96,17 @@ impl FullyConnected<'_> {
     pub fn backward(&mut self, d_values: DMatrix<f64>, learning_rate: f64, t: i32) -> DMatrix<f64> {
         let mut d_values = d_values.clone();
         // Calculate the derivative of the activation function
-        if self.activation == "softmax" {
-            unimplemented!("softmax not yet implemented.")
-        } else if self.activation == "relu" {
-            d_values.component_mul_assign(&self.output.map(|x| if x > 0.0 { 1.0 } else { 0.0 }));
+        match self.activation {
+            "relu" => {
+                d_values
+                    .component_mul_assign(&self.output.map(|x| if x > 0.0 { 1.0 } else { 0.0 }));
+            }
+            "softmax" => {
+                unimplemented!("softmax not yet implemented.")
+            }
+            _ => {
+                panic!("Invalid activation function passed. Use either relu or softmax.")
+            }
         }
         // Calculate the derivative with respect to weights and biases
         let d_weights = self.output.transpose() * &d_values;

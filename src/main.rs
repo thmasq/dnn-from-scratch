@@ -1,6 +1,5 @@
 extern crate nalgebra as na;
 extern crate ndarray as nd;
-extern crate nshare as ns;
 extern crate polars;
 extern crate rand;
 extern crate rand_distr;
