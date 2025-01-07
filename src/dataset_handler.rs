@@ -42,15 +42,15 @@ pub fn load_rssi_dataset(
     (x_train, y_train, x_test, y_test)
 }
 
-fn read_mnist_npy(path_to_npy: PathBuf) -> ArrayD<u8> {
+fn read_mnist_npy(path_to_npy: PathBuf) -> ArrayD<f64> {
     let reader = File::open(path_to_npy).expect("Failure when reading npy file.");
-    let array = ArrayD::<u8>::read_npy(reader).expect("Failure when parsing npy file.");
+    let array = ArrayD::<f64>::read_npy(reader).expect("Failure when parsing npy file.");
     array
 }
 
 pub fn load_mnist_dataset(
     path_to_folder: &str,
-) -> (ArrayD<u8>, ArrayD<u8>, ArrayD<u8>, ArrayD<u8>) {
+) -> (ArrayD<f64>, ArrayD<f64>, ArrayD<f64>, ArrayD<f64>) {
     let files = ["x_train.npy", "y_train.npy", "x_test.npy", "y_test.npy"];
     let path_to_folder = Path::new(path_to_folder);
     let mut arrays = [None, None, None, None];

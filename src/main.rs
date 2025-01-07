@@ -34,7 +34,7 @@ fn main() {
         x_test.shape(),
         y_test.shape()
     );
-    // let neural_network = neural_network::NeuralNetwork::new(INPUT_SIZE, OUTPUT_SIZE, HIDDEN_SIZES);
-    // neural_network.train(x_train, y_train, x_test, y_test, 100, 0.001, 0.001);
-    // neural_network.plot();
+    let neural_network = neural_network::NeuralNetwork::new(INPUT_SIZE, OUTPUT_SIZE, HIDDEN_SIZES);
+    neural_network.train(x_train, y_train, x_test, y_test, 100, 0.001, 0.001);
+    neural_network.plot();
 }

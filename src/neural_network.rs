@@ -1,4 +1,4 @@
-use na::DMatrix;
+use nd::ArrayD;
 
 use crate::fully_connected::FullyConnected;
 
@@ -21,11 +21,12 @@ impl NeuralNetwork<'_> {
         }
     }
 
-    fn forward(&mut self, inputs: DMatrix<f64>) -> DMatrix<f64> {
-        let layer1_output = self.layer_1.forward(inputs);
-        let layer2_output = self.layer_2.forward(layer1_output);
-        let layer3_output = self.layer_3.forward(layer2_output);
-        layer3_output
+    fn forward(&mut self, inputs: ArrayD<f64>) -> ArrayD<f64> {
+        // let layer1_output = self.layer_1.forward(inputs);
+        // let layer2_output = self.layer_2.forward(layer1_output);
+        // let layer3_output = self.layer_3.forward(layer2_output);
+        // layer3_output
+        unimplemented!("Fully connected layer is still not implemented")
     }
 
     /// This function does the training process of the model.
@@ -34,10 +35,10 @@ impl NeuralNetwork<'_> {
     /// after that the backpropagation is done.
     pub fn train(
         &self,
-        x_train: DMatrix<f64>, // inputs
-        y_train: DMatrix<f64>, //targets
-        x_test: DMatrix<f64>,
-        y_test: DMatrix<f64>,
+        x_train: ArrayD<f64>, // inputs
+        y_train: ArrayD<f64>, //targets
+        x_test: ArrayD<f64>,
+        y_test: ArrayD<f64>,
         n_epochs: u32,
         initial_learning_rate: f32,
         decay: f32,
