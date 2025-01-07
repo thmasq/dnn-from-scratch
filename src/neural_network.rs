@@ -48,10 +48,11 @@ impl NeuralNetwork<'_> {
             .iter()
             .zip(target.iter())
             .for_each(|(predicted, expected)| {
-                total_sum += *expected * f64::ln(*expected + EPSILON);
+                // predicted is resulting in NaN -- check
+                total_sum += *predicted * f64::ln(*expected + EPSILON);
                 total_elements += 1.;
             });
-        total_sum / total_elements
+        -1. * (total_sum / total_elements)
     }
 
     fn argmax(&self, arr: &Array2<f64>, axis: usize) -> Array1<usize> {
