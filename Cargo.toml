@@ -10,3 +10,7 @@ rand_distr = "0.4.3"
 polars = { version = "0.44.2", features = ["polars-io", "ndarray"] }
 ndarray = "0.16.1"
 
+[dependencies.ndarray-npy]
+version = "0.9.1"
+default-features = false
+features = []
