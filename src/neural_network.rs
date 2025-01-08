@@ -133,6 +133,6 @@ impl NeuralNetwork<'_> {
             report_data.add(train_loss, train_accuracy, test_loss, test_accuracy);
             report_data.print_report(epoch);
         }
-        report_data.plot_accuracy("accuracy.png");
+        report_data.save_report(true, true);
     }
 }
