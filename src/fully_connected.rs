@@ -66,11 +66,16 @@ impl FullyConnected<'_> {
                 self.output = z.mapv(|v| v.max(0.));
             }
             "softmax" => {
-                let mut z_max = f64::NEG_INFINITY;
-                z.iter().for_each(|&v| {
-                    z_max = if z_max < v { v } else { z_max };
-                });
-                let exp_values = z.mapv(|v| (v - z_max).exp());
+                for row in z.rows_mut() {
+                    let mut z_max = f64::NEG_INFINITY;
+                    row.iter().for_each(|&v| {
+                        z_max = if z_max < v { v } else { z_max };
+                    });
+                    for i in row {
+                        *i -= z_max;
+                    }
+                }
+                let exp_values = z.mapv(|v| v.exp());
                 let exp_values_sum = exp_values.sum() + self.epsilon;
                 self.output = exp_values / exp_values_sum;
             }
