@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use nd::{s, Array1, Array2, Array3, Axis};
 
 use crate::fully_connected::FullyConnected;
@@ -96,6 +98,30 @@ impl NeuralNetwork<'_> {
         (equal_elements as f64) / (total_elements as f64)
     }
 
+    fn print_report(
+        &self,
+        epoch: u32,
+        n_epochs: u32,
+        train_loss: f64,
+        train_accuracy: f64,
+        test_loss: f64,
+        test_accuracy: f64,
+    ) {
+        if epoch > 1 {
+            println!("\r\x1b[6A");
+        }
+        let report_message = format!(
+            "\
+        ┌───────────┬────────────────────────────────┬────────────────────────────────┐\n\
+        │   Epoch   │            Train               │             Test               │\n\
+        ├───────────┼──────────────┬─────────────────┼──────────────┬─────────────────┤\n\
+        │ {:4}/{:<4} │ Loss: {:6.4} │ Accuracy: {:4.2}% │ Loss: {:6.4} │ Accuracy: {:4.2}% │\n\
+        └───────────┴──────────────┴─────────────────┴──────────────┴─────────────────┘",
+            epoch, n_epochs, train_loss, train_accuracy, test_loss, test_accuracy
+        );
+        println!("{}", report_message);
+    }
+
     /// This function does the training process of the model.
     /// Firstly, forward propagation is done,
     /// then the loss and accuracy are calculated,
@@ -113,6 +139,8 @@ impl NeuralNetwork<'_> {
         let epsilon = 1e-10;
         let mut train_losses = Vec::new();
         let mut train_accuracies = Vec::new();
+        let mut test_losses = Vec::new();
+        let mut test_accuracies = Vec::new();
         let mut learning_rate;
         for epoch in 1..=n_epochs {
             // Train pipeline
@@ -125,12 +153,24 @@ impl NeuralNetwork<'_> {
             let output_gradient = (output - y_train.clone()).map(|&v| v * scaling_factor);
             learning_rate = initial_learning_rate / (1. + decay * epoch as f64);
             self.backward(&output_gradient, learning_rate, epoch);
+            // Testing
+            let output = self.forward(&x_test);
+            let test_loss = self.categorical_cross_entropy(&output, &y_test);
+            let predicted_labels = self.argmax(&output, 1);
+            let true_labels = self.argmax(&y_test, 1);
+            let test_accuracy = self.compute_accuracy(&predicted_labels, &true_labels);
             // Report
             train_losses.push(train_loss);
             train_accuracies.push(train_accuracy);
-            println!(
-                "Epoch: {} | Train Loss: {:.4}, Train Accuracy: {:.4}",
-                epoch, train_loss, train_accuracy
+            test_losses.push(test_loss);
+            test_accuracies.push(test_accuracy);
+            self.print_report(
+                epoch,
+                n_epochs,
+                train_loss,
+                train_accuracy,
+                test_loss,
+                test_accuracy,
             );
         }
     }

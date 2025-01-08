@@ -33,7 +33,7 @@ pub fn load_rssi_dataset(
     }
     let num_test = (df_nrows as f64 * test_proportion).round() as usize;
     let num_train = df_nrows - num_test;
-    let train_slice = s![num_train..df_nrows, ..];
+    let train_slice = s![0..num_train, ..];
     let test_slice = s![num_train..df_nrows, ..];
     let x_train = x_matrix.slice(train_slice).into_owned();
     let y_train = y_matrix.slice(train_slice).into_owned();
