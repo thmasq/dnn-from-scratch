@@ -17,7 +17,7 @@ impl NeuralNetwork<'_> {
         NeuralNetwork {
             layer_1: FullyConnected::new(input_size, hidden_sizes[0], "relu"),
             layer_2: FullyConnected::new(hidden_sizes[0], hidden_sizes[1], "relu"),
-            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "softmax"),
+            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "relu"), // Temporarily replaced with relu
         }
     }
 
@@ -115,6 +115,7 @@ impl NeuralNetwork<'_> {
         let mut accuracies = Vec::new();
         let mut learning_rate;
         for epoch in 1..=n_epochs {
+            // Train
             let output = self.forward(&x_train);
             let loss = self.categorical_cross_entropy(&output, &y_train);
             let predicted_labels = self.argmax(&output, 1);
@@ -122,11 +123,22 @@ impl NeuralNetwork<'_> {
             let accuracy = self.compute_accuracy(&predicted_labels, &true_labels);
             let scaling_factor = 6. / output.shape()[0] as f64;
             let output_gradient = (output - y_train.clone()).map(|&v| v * scaling_factor);
+            // Backward
             learning_rate = initial_learning_rate / (1. + decay * epoch as f64);
             self.backward(&output_gradient, learning_rate, epoch);
+            // Test
+            let output = self.forward(&x_test);
+            let test_loss = self.categorical_cross_entropy(&output, &y_test);
+            let predicted_labels = self.argmax(&output, 1);
+            let true_labels = self.argmax(&y_test, 1);
+            let test_accuracy = self.compute_accuracy(&predicted_labels, &true_labels);
+            // Report
             losses.push(loss);
             accuracies.push(accuracy);
-            println!("Epoch: {}, loss: {}, accuracy: {}", epoch, loss, accuracy);
+            println!(
+                "Epoch: {} | Train loss: {:.2}, train accuracy: {:.2} | Test loss: {:.2}, test accuracy: {:.2}",
+                epoch, loss, accuracy, test_loss, test_accuracy
+            );
         }
     }
 
