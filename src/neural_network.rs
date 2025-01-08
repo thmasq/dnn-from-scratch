@@ -17,7 +17,7 @@ impl NeuralNetwork<'_> {
         NeuralNetwork {
             layer_1: FullyConnected::new(input_size, hidden_sizes[0], "relu"),
             layer_2: FullyConnected::new(hidden_sizes[0], hidden_sizes[1], "relu"),
-            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "softmax"),
+            layer_3: FullyConnected::new(hidden_sizes[1], output_size, "relu"),
         }
     }
 
