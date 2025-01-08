@@ -65,22 +65,16 @@ impl FullyConnected<'_> {
             }
             "softmax" => {
                 for row in z.rows_mut() {
-                    let mut z_max = f64::NEG_INFINITY;
-                    row.iter().for_each(|&v| {
-                        z_max = if z_max < v { v } else { z_max };
-                    });
+                    let z_max = row.iter().fold(f64::NEG_INFINITY, |max, &v| max.max(v));
                     for i in row {
                         *i -= z_max;
                     }
                 }
-                let exp_values = z.mapv(|v| v.exp());
-                for row in z.rows_mut() {
-                    let mut total_sum = 0.;
-                    row.iter().for_each(|&v| {
-                        total_sum += v;
-                    });
+                let mut exp_values = z.mapv(|v| v.exp());
+                for row in exp_values.rows_mut() {
+                    let sum: f64 = row.iter().sum();
                     for i in row {
-                        *i /= total_sum;
+                        *i /= sum;
                     }
                 }
                 self.output = exp_values;
