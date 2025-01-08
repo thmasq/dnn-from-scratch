@@ -48,7 +48,6 @@ impl NeuralNetwork<'_> {
             .iter()
             .zip(target.iter())
             .for_each(|(predicted, expected)| {
-                // predicted is resulting in NaN -- check
                 total_sum += *predicted * f64::ln(*expected + EPSILON);
                 total_elements += 1.;
             });

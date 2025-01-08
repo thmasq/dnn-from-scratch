@@ -1,5 +1,3 @@
-use core::f64;
-
 use ndarray::{Array1, Array2, Axis};
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal};
@@ -76,8 +74,16 @@ impl FullyConnected<'_> {
                     }
                 }
                 let exp_values = z.mapv(|v| v.exp());
-                let exp_values_sum = exp_values.sum() + self.epsilon;
-                self.output = exp_values / exp_values_sum;
+                for row in z.rows_mut() {
+                    let mut total_sum = 0.;
+                    row.iter().for_each(|&v| {
+                        total_sum += v;
+                    });
+                    for i in row {
+                        *i /= total_sum;
+                    }
+                }
+                self.output = exp_values;
             }
             _ => {
                 panic!("Invalid activation function passed. Use either relu or softmax.")
