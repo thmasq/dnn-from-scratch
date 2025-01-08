@@ -79,12 +79,33 @@ fn read_mnist_npy(path_to_npy: PathBuf) -> Array3<f64> {
     array
 }
 
-fn process_images(image_batch: Array3<f64>) -> Array2<f64> {
+fn process_images(image_batch: &Array3<f64>) -> Array2<f64> {
     let nrows = image_batch.shape()[0];
     let ncols = image_batch.shape()[1] * image_batch.shape()[2];
-    let reshaped_images = image_batch.into_shape_clone((nrows, ncols)).unwrap();
-    let normalized_images = reshaped_images.mapv(|v| v / 255.);
+    let reshaped_images = image_batch
+        .clone()
+        .into_shape_clone((nrows, ncols))
+        .unwrap();
+    let output = reshaped_images.clone();
+    output
+}
+
+fn normalize_images(processed_images: &Array2<f64>) -> Array2<f64> {
+    let normalized_images = processed_images.mapv(|v| v / 255.);
     normalized_images
+}
+
+fn to_categorical(x_train: &Array2<f64>) -> Array2<f64> {
+    let num_classes = x_train.fold(0.0, |acc: f64, &x| acc.max(x)) as usize + 1;
+    let mut result = Array2::zeros((x_train.nrows(), num_classes));
+    for (i, row) in x_train.outer_iter().enumerate() {
+        if let Some(&label) = row.iter().next() {
+            if label >= 0.0 && label < num_classes as f64 {
+                result[[i, label as usize]] = 1.0;
+            }
+        }
+    }
+    result
 }
 
 pub fn load_mnist_dataset(
@@ -97,8 +118,14 @@ pub fn load_mnist_dataset(
         let file = Path::new(file);
         let filepath = path_to_folder.join(file);
         let array = read_mnist_npy(filepath);
-        let reshaped_array = process_images(array);
-        arrays[i] = Some(reshaped_array);
+        let processed_array = process_images(&array);
+        if (i as i32) % 2 == 0 {
+            let normalized_array = normalize_images(&processed_array);
+            arrays[i] = Some(normalized_array);
+        } else {
+            let categorized_array = to_categorical(&processed_array);
+            arrays[i] = Some(categorized_array);
+        }
     }
     let (x_train, y_train, x_test, y_test) = (
         arrays[0].take().unwrap(),
