@@ -1,8 +1,7 @@
-use std::io::Write;
-
-use nd::{s, Array1, Array2, Array3, Axis};
+use nd::{Array1, Array2};
 
 use crate::fully_connected::FullyConnected;
+use crate::report;
 
 pub struct NeuralNetwork<'a> {
     layer_1: FullyConnected<'a>,
@@ -37,8 +36,7 @@ impl NeuralNetwork<'_> {
         let layer2_gradient = self
             .layer_2
             .backward(layer3_gradient, learning_rate, time_step);
-        let layer1_gradient = self
-            .layer_1
+        self.layer_1
             .backward(layer2_gradient, learning_rate, time_step);
     }
 
@@ -98,30 +96,6 @@ impl NeuralNetwork<'_> {
         (equal_elements as f64) / (total_elements as f64)
     }
 
-    fn print_report(
-        &self,
-        epoch: u32,
-        n_epochs: u32,
-        train_loss: f64,
-        train_accuracy: f64,
-        test_loss: f64,
-        test_accuracy: f64,
-    ) {
-        if epoch > 1 {
-            println!("\r\x1b[6A");
-        }
-        let report_message = format!(
-            "\
-        ┌───────────┬────────────────────────────────┬────────────────────────────────┐\n\
-        │   Epoch   │            Train               │             Test               │\n\
-        ├───────────┼──────────────┬─────────────────┼──────────────┬─────────────────┤\n\
-        │ {:4}/{:<4} │ Loss: {:6.4} │ Accuracy: {:4.2}% │ Loss: {:6.4} │ Accuracy: {:4.2}% │\n\
-        └───────────┴──────────────┴─────────────────┴──────────────┴─────────────────┘",
-            epoch, n_epochs, train_loss, train_accuracy, test_loss, test_accuracy
-        );
-        println!("{}", report_message);
-    }
-
     /// This function does the training process of the model.
     /// Firstly, forward propagation is done,
     /// then the loss and accuracy are calculated,
@@ -136,14 +110,10 @@ impl NeuralNetwork<'_> {
         initial_learning_rate: f64,
         decay: f64,
     ) {
-        let epsilon = 1e-10;
-        let mut train_losses = Vec::new();
-        let mut train_accuracies = Vec::new();
-        let mut test_losses = Vec::new();
-        let mut test_accuracies = Vec::new();
         let mut learning_rate;
+        let mut report_data = report::ReportData::new(n_epochs);
         for epoch in 1..=n_epochs {
-            // Train pipeline
+            // Training pipeline
             let output = self.forward(&x_train);
             let train_loss = self.categorical_cross_entropy(&output, &y_train);
             let predicted_labels = self.argmax(&output, 1);
@@ -153,31 +123,16 @@ impl NeuralNetwork<'_> {
             let output_gradient = (output - y_train.clone()).map(|&v| v * scaling_factor);
             learning_rate = initial_learning_rate / (1. + decay * epoch as f64);
             self.backward(&output_gradient, learning_rate, epoch);
-            // Testing
+            // Testing pipeline
             let output = self.forward(&x_test);
             let test_loss = self.categorical_cross_entropy(&output, &y_test);
             let predicted_labels = self.argmax(&output, 1);
             let true_labels = self.argmax(&y_test, 1);
             let test_accuracy = self.compute_accuracy(&predicted_labels, &true_labels);
             // Report
-            train_losses.push(train_loss);
-            train_accuracies.push(train_accuracy);
-            test_losses.push(test_loss);
-            test_accuracies.push(test_accuracy);
-            self.print_report(
-                epoch,
-                n_epochs,
-                train_loss,
-                train_accuracy,
-                test_loss,
-                test_accuracy,
-            );
+            report_data.add(train_loss, train_accuracy, test_loss, test_accuracy);
+            report_data.print_report(epoch);
         }
-    }
-
-    /// This function will plot Loss over Epochs
-    /// and Accuracy over Epochs.
-    pub fn plot(&self) {
-        unimplemented!("Plot function is not yet implemented")
+        report_data.plot_accuracy("accuracy.png");
     }
 }
