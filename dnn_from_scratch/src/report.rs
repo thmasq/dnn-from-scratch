@@ -174,16 +174,22 @@ impl ReportData {
             let train_error = self.train_errors[i];
             let test_loss = self.test_losses[i];
             let test_error = self.test_errors[i];
+            let metric = match self.metric {
+                ErrorMetric::Accuracy => "Accuracy",
+                ErrorMetric::Error => "Error",
+            };
             writeln!(
                 file,
                 "Epoch {}/{} \
-                | Train: Loss {}, Accuracy {} \
-                | Test: Loss {}, Accuracy {}",
+                | Train: Loss {}, {} {} \
+                | Test: Loss {}, {} {}",
                 i + 1,
                 n_epochs,
                 train_loss,
+                metric,
                 train_error,
                 test_loss,
+                metric,
                 test_error
             )
             .expect("Failure when saving training history.");
