@@ -181,8 +181,8 @@ impl ReportData {
             writeln!(
                 file,
                 "Epoch {}/{} \
-                | Train: Loss {}, {} {} \
-                | Test: Loss {}, {} {}",
+                | Train: Loss {:.8}, {} {:.8} \
+                | Test: Loss {:.8}, {} {:.8}",
                 i + 1,
                 n_epochs,
                 train_loss,
