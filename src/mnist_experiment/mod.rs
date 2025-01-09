@@ -46,7 +46,7 @@ impl Training for NeuralNetwork {
             );
             let scaling_factor = 6. / output.shape()[0] as f64;
             let output_gradient = (output - y_train.clone()).map(|&v| v * scaling_factor);
-            learning_rate = initial_learning_rate / (1. + decay * epoch as f64);
+            learning_rate = initial_learning_rate / (1. + decay * epoch as f64); // Learning rate step decay
             self.backward(&output_gradient, learning_rate, epoch);
             // Testing pipeline
             let output = self.forward(&x_test);
@@ -78,5 +78,5 @@ pub fn run_mnist_experiment() {
     neural_network.add_layer(INPUT_SIZE, HIDDEN_SIZES[0], "relu");
     neural_network.add_layer(HIDDEN_SIZES[0], HIDDEN_SIZES[1], "relu");
     neural_network.add_layer(HIDDEN_SIZES[1], OUTPUT_SIZE, "softmax");
-    neural_network.train(x_train, y_train, x_test, y_test, 100, 0.001, 0.001);
+    neural_network.train(x_train, y_train, x_test, y_test, 10, 0.001, 0.001);
 }

@@ -151,14 +151,16 @@ impl ReportData {
                     .data(y_train)
                     .line_style(LineStyle::new().width(10).opacity(0.8))
                     .symbol_size(20)
-                    .name("Train"),
+                    .name("Train")
+                    .smooth(false),
             )
             .series(
                 Line::new()
                     .name("Validation")
                     .data(y_test)
                     .line_style(LineStyle::new().width(10).opacity(0.8))
-                    .symbol_size(20),
+                    .symbol_size(20)
+                    .smooth(false),
             );
         let mut renderer = ImageRenderer::new(1920, 1080);
         renderer
