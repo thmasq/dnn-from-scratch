@@ -3,36 +3,42 @@ use charming::{element::AxisType, series::Line, Chart, ImageFormat, ImageRendere
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 
+enum ErrorMetric {
+    Accuracy,
+    Error,
+}
+
 pub struct ReportData {
     n_epochs: u32,
     train_losses: Vec<f64>,
-    train_accuracies: Vec<f64>,
+    train_errors: Vec<f64>,
     test_losses: Vec<f64>,
-    test_accuracies: Vec<f64>,
+    test_errors: Vec<f64>,
+    metric: ErrorMetric,
 }
 
 impl ReportData {
-    pub fn new(n_epochs: u32) -> ReportData {
+    pub fn new(n_epochs: u32, error_metric: &str) -> ReportData {
+        let metric = match error_metric {
+            "accuracy" => ErrorMetric::Accuracy,
+            "error" => ErrorMetric::Error,
+            _ => panic!("Unintended error metric passed."),
+        };
         ReportData {
             n_epochs,
             train_losses: Vec::new(),
-            train_accuracies: Vec::new(),
+            train_errors: Vec::new(),
             test_losses: Vec::new(),
-            test_accuracies: Vec::new(),
+            test_errors: Vec::new(),
+            metric,
         }
     }
 
-    pub fn add(
-        &mut self,
-        train_loss: f64,
-        train_accuracy: f64,
-        test_loss: f64,
-        test_accuracy: f64,
-    ) {
+    pub fn add(&mut self, train_loss: f64, train_error: f64, test_loss: f64, test_error: f64) {
         self.train_losses.push(train_loss);
-        self.train_accuracies.push(train_accuracy);
+        self.train_errors.push(train_error);
         self.test_losses.push(test_loss);
-        self.test_accuracies.push(test_accuracy);
+        self.test_errors.push(test_error);
     }
 
     pub fn is_empty(&self) -> bool {
@@ -43,28 +49,48 @@ impl ReportData {
         assert!(!self.is_empty(), "Error: report_data is empty");
         let n_epochs = self.n_epochs;
         let train_loss = self.train_losses.last().unwrap().to_owned();
-        let train_accuracy = self.train_accuracies.last().unwrap().to_owned() * 100.;
+        let train_error = self.train_errors.last().unwrap().to_owned();
         let test_loss = self.test_losses.last().unwrap().to_owned();
-        let test_accuracy = self.test_accuracies.last().unwrap().to_owned() * 100.;
+        let test_error = self.test_errors.last().unwrap().to_owned();
         if epoch > 1 {
             println!("\r\x1b[6A");
         }
-        let report_message = format!(
-            "\
-        ┌───────────┬────────────────────────────────┬────────────────────────────────┐\n\
-        │   Epoch   │            Train               │             Test               │\n\
-        ├───────────┼──────────────┬─────────────────┼──────────────┬─────────────────┤\n\
-        │ {:4}/{:<4} │ Loss:{:7.4} │ Accuracy:{:5.1}% │ Loss:{:7.4} │ Accuracy:{:5.1}% │\n\
-        └───────────┴──────────────┴─────────────────┴──────────────┴─────────────────┘",
-            epoch, n_epochs, train_loss, train_accuracy, test_loss, test_accuracy
-        );
+        let report_message = match self.metric {
+            ErrorMetric::Accuracy => {
+                format!(
+                    "\
+                ┌───────────┬────────────────────────────────┬────────────────────────────────┐  \n\
+                │   Epoch   │            Train               │             Test               │  \n\
+                ├───────────┼──────────────┬─────────────────┼──────────────┬─────────────────┤  \n\
+                │ {:4}/{:<4} │ Loss:{:7.4} │ Accuracy:{:5.1}% │ Loss:{:7.4} │ Accuracy:{:5.1}% │  \n\
+                └───────────┴──────────────┴─────────────────┴──────────────┴─────────────────┘  ",
+                    epoch,
+                    n_epochs,
+                    train_loss,
+                    train_error * 100.,
+                    test_loss,
+                    test_error * 100.
+                )
+            }
+            ErrorMetric::Error => {
+                format!(
+                    "\
+                ┌───────────┬────────────────────────────────┬────────────────────────────────┐  \n\
+                │   Epoch   │            Train               │             Test               │  \n\
+                ├───────────┼──────────────┬─────────────────┼──────────────┬─────────────────┤  \n\
+                │ {:4}/{:<4} │ Loss:{:7.2} │ Error:{:9.2} │ Loss:{:7.2} │ Error:{:9.2} │  \n\
+                └───────────┴──────────────┴─────────────────┴──────────────┴─────────────────┘  ",
+                    epoch, n_epochs, train_loss, train_error, test_loss, test_error
+                )
+            }
+        };
         println!("{}", report_message);
     }
 
-    pub fn plot_accuracy(&self, output_path: &str) {
+    pub fn plot_error(&self, output_path: &str) {
         let n_epochs = self.n_epochs;
-        let y_train = self.train_accuracies.to_owned();
-        let y_test = self.test_accuracies.to_owned();
+        let y_train = self.train_errors.to_owned();
+        let y_test = self.test_errors.to_owned();
         let x_data: Vec<String> = (1..=n_epochs).map(|v| v.to_string()).collect();
         let chart = Chart::new()
             .title(
@@ -145,9 +171,9 @@ impl ReportData {
         for i in 0..self.n_epochs as usize {
             let n_epochs = self.n_epochs;
             let train_loss = self.train_losses[i];
-            let train_accuracy = self.train_accuracies[i];
+            let train_error = self.train_errors[i];
             let test_loss = self.test_losses[i];
-            let test_accuracy = self.test_accuracies[i];
+            let test_error = self.test_errors[i];
             writeln!(
                 file,
                 "Epoch {}/{} \
@@ -156,9 +182,9 @@ impl ReportData {
                 i + 1,
                 n_epochs,
                 train_loss,
-                train_accuracy,
+                train_error,
                 test_loss,
-                test_accuracy
+                test_error
             )
             .expect("Failure when saving training history.");
         }
@@ -167,7 +193,7 @@ impl ReportData {
     pub fn save_report(&self, plot: bool, history: bool) {
         create_dir_all("./output").expect("Failure saving report.");
         if plot {
-            self.plot_accuracy("output/accuracy_plot.png");
+            self.plot_error("output/accuracy_plot.png");
             println!("Accuracy plot saved to: output/accuracy_plot.png");
         }
         if history {

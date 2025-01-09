@@ -1,5 +1,5 @@
 use crate::fully_connected::{Activation, FullyConnected};
-use nd::{Array1, Array2};
+use nd::{Array1, Array2, ArrayD};
 
 pub struct NeuralNetwork {
     layers: Vec<FullyConnected>,
@@ -55,6 +55,20 @@ impl NeuralNetwork {
         -1. * (total_sum / total_elements)
     }
 
+    pub fn mse(&self, output: &Array2<f64>, target: &Array2<f64>) -> f64 {
+        let diff = output - target;
+        let squared_diff = diff.mapv(|x| x.powi(2));
+        let mse = squared_diff.mean().unwrap_or(0.0);
+        mse
+    }
+
+    pub fn rmse(&self, output: &Array2<f64>, target: &Array2<f64>) -> f64 {
+        let diff = output - target;
+        let squared_diff = diff.mapv(|x| x.powi(2));
+        let mse = squared_diff.mean().unwrap_or(0.0);
+        mse.sqrt()
+    }
+
     pub fn argmax(&self, arr: &Array2<f64>, axis: usize) -> Array1<usize> {
         let shape = arr.shape();
         let (nrows, ncols) = (shape[0], shape[1]);
@@ -79,9 +93,9 @@ impl NeuralNetwork {
         Array1::from_vec(result)
     }
 
-    pub fn compute_accuracy<T>(&self, output: &Array1<T>, target: &Array1<T>) -> f64
+    pub fn compute_accuracy<T>(&self, output: &ArrayD<T>, target: &ArrayD<T>) -> f64
     where
-        T: Eq,
+        T: PartialEq,
     {
         let mut total_elements = 0;
         let mut equal_elements = 0;

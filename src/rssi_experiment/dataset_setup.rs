@@ -1,6 +1,12 @@
 use nd::{s, Array2};
 use polars::prelude::*;
 
+fn min_max_scale(matrix: Array2<f64>) -> Array2<f64> {
+    let min = matrix.fold(f64::INFINITY, |a, &b| a.min(b));
+    let max = matrix.fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+    matrix.mapv(|x| (x - min) / (max - min))
+}
+
 pub fn load_rssi_dataset(
     path_to_csv: &str,
     test_proportion: f64,
@@ -28,6 +34,7 @@ pub fn load_rssi_dataset(
             x_matrix[[i, j - 3]] = df[[i, j]];
         }
     }
+    let x_matrix = min_max_scale(x_matrix);
     let num_test = (df_nrows as f64 * test_proportion).round() as usize;
     let num_train = df_nrows - num_test;
     let train_slice = s![0..num_train, ..];

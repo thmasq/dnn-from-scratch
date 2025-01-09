@@ -85,9 +85,7 @@ impl FullyConnected {
                 }
                 self.output = exp_values;
             }
-            Activation::None => {
-                unimplemented!("No Activation not yet implemented.")
-            }
+            Activation::None => self.output = z.to_owned(),
         }
         self.output.clone()
     }
@@ -115,9 +113,7 @@ impl FullyConnected {
                     d_values.row_mut(i).assign(&result);
                 }
             }
-            Activation::None => {
-                unimplemented!("No Activation not yet implemented.")
-            }
+            Activation::None => {}
         }
         // Calculate the derivative with respect to weights and biases
         let d_weights = self.input.t().dot(&d_values);

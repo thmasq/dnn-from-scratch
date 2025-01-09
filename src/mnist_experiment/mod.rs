@@ -30,14 +30,15 @@ impl Training for NeuralNetwork {
         decay: f64,
     ) {
         let mut learning_rate;
-        let mut report_data = ReportData::new(n_epochs);
+        let mut report_data = ReportData::new(n_epochs, "accuracy");
         for epoch in 1..=n_epochs {
             // Training pipeline
             let output = self.forward(&x_train);
             let train_loss = self.categorical_cross_entropy(&output, &y_train);
             let predicted_labels = self.argmax(&output, 1);
             let true_labels = self.argmax(&y_train, 1);
-            let train_accuracy = self.compute_accuracy(&predicted_labels, &true_labels);
+            let train_accuracy =
+                self.compute_accuracy(&predicted_labels.into_dyn(), &true_labels.into_dyn());
             let scaling_factor = 6. / output.shape()[0] as f64;
             let output_gradient = (output - y_train.clone()).map(|&v| v * scaling_factor);
             learning_rate = initial_learning_rate / (1. + decay * epoch as f64);
@@ -47,7 +48,8 @@ impl Training for NeuralNetwork {
             let test_loss = self.categorical_cross_entropy(&output, &y_test);
             let predicted_labels = self.argmax(&output, 1);
             let true_labels = self.argmax(&y_test, 1);
-            let test_accuracy = self.compute_accuracy(&predicted_labels, &true_labels);
+            let test_accuracy =
+                self.compute_accuracy(&predicted_labels.into_dyn(), &true_labels.into_dyn());
             // Report
             report_data.add(train_loss, train_accuracy, test_loss, test_accuracy);
             report_data.print_report(epoch);
