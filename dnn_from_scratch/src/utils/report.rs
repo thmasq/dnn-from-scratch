@@ -147,7 +147,7 @@ impl ReportData {
             let train_loss = self.train_losses[i];
             let train_accuracy = self.train_accuracies[i];
             let test_loss = self.test_losses[i];
-            let test_accuracy = self.test_losses[i];
+            let test_accuracy = self.test_accuracies[i];
             writeln!(
                 file,
                 "Epoch {}/{} \
@@ -167,8 +167,8 @@ impl ReportData {
     pub fn save_report(&self, plot: bool, history: bool) {
         create_dir_all("./output").expect("Failure saving report.");
         if plot {
-            self.plot_accuracy("output/accuracy.png");
-            println!("Accuracy plot saved to: output/accuracy.png");
+            self.plot_accuracy("output/accuracy_plot.png");
+            println!("Accuracy plot saved to: output/accuracy_plot.png");
         }
         if history {
             self.save_training_history("output/training_history.txt");

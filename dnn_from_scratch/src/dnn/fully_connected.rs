@@ -12,12 +12,18 @@ fn generate_weights(input_size: usize, output_size: usize) -> Array2<f64> {
     })
 }
 
-pub struct FullyConnected<'a> {
+pub enum Activation {
+    Softmax,
+    ReLU,
+    None,
+}
+
+pub struct FullyConnected {
     // Weights and biases
     weights: Array2<f64>,
     biases: Array1<f64>,
     // Activation-related
-    activation: &'a str,
+    activation: Activation,
     // Optimizer-related (Adam)
     m_weights: Array2<f64>,
     v_weights: Array2<f64>,
@@ -32,9 +38,9 @@ pub struct FullyConnected<'a> {
     output: Array2<f64>,
 }
 
-impl FullyConnected<'_> {
+impl FullyConnected {
     /// Initialize a fully-connected layer
-    pub fn new<'a>(input_size: usize, output_size: usize, activation: &'a str) -> FullyConnected {
+    pub fn new(input_size: usize, output_size: usize, activation: Activation) -> FullyConnected {
         FullyConnected {
             weights: generate_weights(input_size, output_size),
             biases: Array1::zeros(output_size),
@@ -60,10 +66,10 @@ impl FullyConnected<'_> {
             row += &self.biases;
         }
         match self.activation {
-            "relu" => {
+            Activation::ReLU => {
                 self.output = z.mapv(|v| v.max(0.));
             }
-            "softmax" => {
+            Activation::Softmax => {
                 for row in z.rows_mut() {
                     let z_max = row.iter().fold(f64::NEG_INFINITY, |max, &v| max.max(v));
                     for i in row {
@@ -79,8 +85,8 @@ impl FullyConnected<'_> {
                 }
                 self.output = exp_values;
             }
-            _ => {
-                panic!("Invalid activation function passed. Use either relu or softmax.")
+            Activation::None => {
+                unimplemented!("No Activation not yet implemented.")
             }
         }
         self.output.clone()
@@ -91,10 +97,10 @@ impl FullyConnected<'_> {
         let mut d_values = d_values.clone();
         // Calculate the derivative of the activation function
         match self.activation {
-            "relu" => {
+            Activation::ReLU => {
                 d_values *= &self.output.mapv(|x| if x > 0. { 1. } else { 0. });
             }
-            "softmax" => {
+            Activation::Softmax => {
                 for i in 0..d_values.nrows() {
                     let gradient = d_values.row(i).to_owned();
                     let diagonal = Array2::from_diag(&gradient);
@@ -109,8 +115,8 @@ impl FullyConnected<'_> {
                     d_values.row_mut(i).assign(&result);
                 }
             }
-            _ => {
-                panic!("Invalid activation function passed. Use either relu or softmax.")
+            Activation::None => {
+                unimplemented!("No Activation not yet implemented.")
             }
         }
         // Calculate the derivative with respect to weights and biases
