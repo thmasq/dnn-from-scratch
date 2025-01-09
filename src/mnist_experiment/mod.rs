@@ -78,5 +78,5 @@ pub fn run_mnist_experiment() {
     neural_network.add_layer(INPUT_SIZE, HIDDEN_SIZES[0], "relu");
     neural_network.add_layer(HIDDEN_SIZES[0], HIDDEN_SIZES[1], "relu");
     neural_network.add_layer(HIDDEN_SIZES[1], OUTPUT_SIZE, "softmax");
-    neural_network.train(x_train, y_train, x_test, y_test, 10, 0.001, 0.001);
+    neural_network.train(x_train, y_train, x_test, y_test, 100, 0.001, 0.001);
 }
