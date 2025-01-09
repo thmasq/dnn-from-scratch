@@ -1,22 +1,10 @@
-extern crate nalgebra as na;
-extern crate rand;
-extern crate rand_distr;
+extern crate ndarray as nd;
+extern crate ndarray_npy as npy;
 
-mod dataset_handler;
-mod fully_connected;
-mod neural_network;
+mod mnist_experiment;
+mod rssi_experiment;
 
 fn main() {
-    const INPUT_SIZE: usize = 784;
-    const OUTPUT_SIZE: usize = 10;
-    const HIDDEN_SIZES: [usize; 2] = [512, 512];
-    // Load the dataset
-    let (x_train, y_train, x_test, y_test) = dataset_handler::load_dataset();
-    // Further processing
-    // ...
-    // Instance and initialize the NN
-    let nn = neural_network::NeuralNetwork::new(INPUT_SIZE, OUTPUT_SIZE, HIDDEN_SIZES);
-    // nn.train();
-    // Further processing
-    // ...
+    rssi_experiment::run_rssi_experiment();
+    mnist_experiment::run_mnist_experiment();
 }
