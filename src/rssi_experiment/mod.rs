@@ -68,5 +68,5 @@ pub fn run_rssi_experiment() {
     neural_network.add_layer(INPUT_SIZE, HIDDEN_SIZES[0], "relu");
     neural_network.add_layer(HIDDEN_SIZES[0], HIDDEN_SIZES[1], "relu");
     neural_network.add_layer(HIDDEN_SIZES[1], OUTPUT_SIZE, "relu");
-    neural_network.train(x_train, y_train, x_test, y_test, 1000, 0.001, 0.);
+    neural_network.train(x_train, y_train, x_test, y_test, 1000, 0.001, 0.00001);
 }

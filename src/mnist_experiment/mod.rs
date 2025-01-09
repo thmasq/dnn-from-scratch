@@ -69,7 +69,7 @@ pub fn run_mnist_experiment() {
     // MNIST Architecture
     const INPUT_SIZE: usize = 784;
     const OUTPUT_SIZE: usize = 10;
-    const HIDDEN_SIZES: [usize; 2] = [512, 521];
+    const HIDDEN_SIZES: [usize; 2] = [512, 512];
     // Load dataset
     let (x_train, y_train, x_test, y_test) = dataset_setup::load_mnist_dataset("assets/mnist");
     println!("MNIST dataset successfully loaded");
