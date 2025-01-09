@@ -1,5 +1,9 @@
 use charming::component::{Axis, Grid, Legend, Title};
-use charming::{element::AxisType, series::Line, Chart, ImageFormat, ImageRenderer};
+use charming::element::{
+    AxisLabel, AxisType, Color, LineStyle, NameLocation, SplitLine, TextStyle,
+};
+use charming::series::Line;
+use charming::{Chart, ImageFormat, ImageRenderer};
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 
@@ -97,7 +101,7 @@ impl ReportData {
                 Title::new()
                     .text("Accuracy over epochs")
                     .text_style(
-                        charming::element::TextStyle::new()
+                        TextStyle::new()
                             .font_size(32)
                             .font_style("bold".to_string()),
                     )
@@ -105,34 +109,34 @@ impl ReportData {
             )
             .legend(
                 Legend::new()
-                    .text_style(charming::element::TextStyle::new().font_size(28))
+                    .text_style(TextStyle::new().font_size(28))
                     .top("4.5%"),
             )
-            .background_color(charming::element::Color::Value("#FFFFFF".to_string()))
+            .background_color(Color::Value("#FFFFFF".to_string()))
             .x_axis(
                 Axis::new()
                     .data(x_data)
                     .type_(AxisType::Category)
-                    .axis_label(charming::element::AxisLabel::new().font_size(32))
+                    .axis_label(AxisLabel::new().font_size(32))
                     .name("Epoch")
-                    .name_location(charming::element::NameLocation::Middle)
-                    .name_text_style(charming::element::TextStyle::new().font_size(28))
+                    .name_location(NameLocation::Middle)
+                    .name_text_style(TextStyle::new().font_size(28))
                     .name_gap(40)
-                    .split_line(charming::element::SplitLine::new().show(false)),
+                    .split_line(SplitLine::new().show(false)),
             )
             .y_axis(
                 Axis::new()
                     .scale(true)
                     .type_(AxisType::Value)
-                    .axis_label(charming::element::AxisLabel::new().font_size(32))
+                    .axis_label(AxisLabel::new().font_size(32))
                     .min(0.0)
                     .max(1.0)
                     .interval(0.1)
                     .name("Accuracy")
-                    .name_location(charming::element::NameLocation::Middle)
-                    .name_text_style(charming::element::TextStyle::new().font_size(28))
+                    .name_location(NameLocation::Middle)
+                    .name_text_style(TextStyle::new().font_size(28))
                     .name_gap(60)
-                    .split_line(charming::element::SplitLine::new().show(true)),
+                    .split_line(SplitLine::new().show(true)),
             )
             .grid(
                 Grid::new()
@@ -145,16 +149,18 @@ impl ReportData {
             .series(
                 Line::new()
                     .data(y_train)
-                    .line_style(charming::element::LineStyle::new().width(10).opacity(0.8))
+                    .line_style(LineStyle::new().width(10).opacity(0.8))
                     .symbol_size(20)
-                    .name("Train"),
+                    .name("Train")
+                    .smooth(false),
             )
             .series(
                 Line::new()
                     .name("Validation")
                     .data(y_test)
-                    .line_style(charming::element::LineStyle::new().width(10).opacity(0.8))
-                    .symbol_size(20),
+                    .line_style(LineStyle::new().width(10).opacity(0.8))
+                    .symbol_size(20)
+                    .smooth(false),
             );
         let mut renderer = ImageRenderer::new(1920, 1080);
         renderer
@@ -174,16 +180,22 @@ impl ReportData {
             let train_error = self.train_errors[i];
             let test_loss = self.test_losses[i];
             let test_error = self.test_errors[i];
+            let metric = match self.metric {
+                ErrorMetric::Accuracy => "Accuracy",
+                ErrorMetric::Error => "Error",
+            };
             writeln!(
                 file,
                 "Epoch {}/{} \
-                | Train: Loss {}, Accuracy {} \
-                | Test: Loss {}, Accuracy {}",
+                | Train: Loss {:.8}, {} {:.8} \
+                | Test: Loss {:.8}, {} {:.8}",
                 i + 1,
                 n_epochs,
                 train_loss,
+                metric,
                 train_error,
                 test_loss,
+                metric,
                 test_error
             )
             .expect("Failure when saving training history.");

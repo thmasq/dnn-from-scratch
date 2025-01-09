@@ -25,18 +25,14 @@ impl Activation {
         match self.activation_type {
             ActivationType::ReLU => z.mapv(|v| v.max(0.)),
             ActivationType::Softmax => {
-                for row in z.rows_mut() {
+                for mut row in z.rows_mut() {
                     let z_max = row.iter().fold(f64::NEG_INFINITY, |max, &v| max.max(v));
-                    for i in row {
-                        *i -= z_max;
-                    }
+                    row.iter_mut().for_each(|v| *v -= z_max);
                 }
                 let mut exp_values = z.mapv(|v| v.exp());
-                for row in exp_values.rows_mut() {
+                for mut row in exp_values.rows_mut() {
                     let sum: f64 = row.iter().sum();
-                    for i in row {
-                        *i /= sum;
-                    }
+                    row.iter_mut().for_each(|v| *v /= sum);
                 }
                 exp_values
             }
