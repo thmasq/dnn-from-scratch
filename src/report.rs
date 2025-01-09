@@ -142,7 +142,7 @@ impl ReportData {
             .append(true)
             .open(output_path)
             .expect("Failure when saving training history.");
-        for i in 1..self.n_epochs as usize {
+        for i in 0..self.n_epochs as usize {
             let n_epochs = self.n_epochs;
             let train_loss = self.train_losses[i];
             let train_accuracy = self.train_accuracies[i];
