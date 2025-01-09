@@ -1,3 +1,4 @@
+use crate::activation::Activation;
 use ndarray::{Array1, Array2, Axis};
 use rand::thread_rng;
 use rand_distr::{Distribution, Normal};
@@ -5,17 +6,9 @@ use rand_distr::{Distribution, Normal};
 /// Generate weights following the HE-Initialization method
 fn generate_weights(input_size: usize, output_size: usize) -> Array2<f64> {
     let scale = (2. / input_size as f64).sqrt();
-    let normal = Normal::new(0., 1.).unwrap();
+    let normal = Normal::new(0., scale).unwrap();
     let mut rng = thread_rng();
-    Array2::from_shape_fn((input_size, output_size), |_| {
-        normal.sample(&mut rng) * scale
-    })
-}
-
-pub enum Activation {
-    Softmax,
-    ReLU,
-    None,
+    Array2::from_shape_fn((input_size, output_size), |_| normal.sample(&mut rng))
 }
 
 pub struct FullyConnected {
@@ -62,59 +55,17 @@ impl FullyConnected {
         self.input = x;
         let mut z = self.input.dot(&self.weights);
         // Add biases to each row
-        for mut row in z.rows_mut() {
-            row += &self.biases;
-        }
-        match self.activation {
-            Activation::ReLU => {
-                self.output = z.mapv(|v| v.max(0.));
-            }
-            Activation::Softmax => {
-                for row in z.rows_mut() {
-                    let z_max = row.iter().fold(f64::NEG_INFINITY, |max, &v| max.max(v));
-                    for i in row {
-                        *i -= z_max;
-                    }
-                }
-                let mut exp_values = z.mapv(|v| v.exp());
-                for row in exp_values.rows_mut() {
-                    let sum: f64 = row.iter().sum();
-                    for i in row {
-                        *i /= sum;
-                    }
-                }
-                self.output = exp_values;
-            }
-            Activation::None => self.output = z.to_owned(),
-        }
+        z.rows_mut()
+            .into_iter()
+            .for_each(|mut row| row += &self.biases);
+        self.output = self.activation.forward(z);
         self.output.clone()
     }
 
     /// Backpropagation
     pub fn backward(&mut self, d_values: Array2<f64>, learning_rate: f64, t: u32) -> Array2<f64> {
-        let mut d_values = d_values.clone();
         // Calculate the derivative of the activation function
-        match self.activation {
-            Activation::ReLU => {
-                d_values *= &self.output.mapv(|x| if x > 0. { 1. } else { 0. });
-            }
-            Activation::Softmax => {
-                for i in 0..d_values.nrows() {
-                    let gradient = d_values.row(i).to_owned();
-                    let diagonal = Array2::from_diag(&gradient);
-                    let outer_product = gradient
-                        .clone()
-                        .insert_axis(Axis(1))
-                        .dot(&gradient.clone().insert_axis(Axis(0)));
-                    let jacobian_matrix = diagonal - outer_product;
-                    let transformed_gradient =
-                        jacobian_matrix.dot(&self.output.row(i).to_owned().insert_axis(Axis(1)));
-                    let result = transformed_gradient.index_axis(Axis(1), 0);
-                    d_values.row_mut(i).assign(&result);
-                }
-            }
-            Activation::None => {}
-        }
+        let d_values = self.activation.backward(&d_values, &self.output);
         // Calculate the derivative with respect to weights and biases
         let d_weights = self.input.t().dot(&d_values);
         let d_biases = d_values.sum_axis(Axis(0));
