@@ -5,7 +5,6 @@ use nd::Array2;
 
 mod dataset_setup;
 
-#[allow(dead_code)]
 pub trait Training {
     fn train(
         &mut self,
@@ -56,7 +55,7 @@ impl Training for NeuralNetwork {
 }
 
 pub fn run_rssi_experiment() {
-    // MNIST Architecture
+    // RSSI Architecture
     const INPUT_SIZE: usize = 13;
     const OUTPUT_SIZE: usize = 2;
     const HIDDEN_SIZES: [usize; 2] = [200, 200];
