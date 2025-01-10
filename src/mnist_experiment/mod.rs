@@ -1,11 +1,12 @@
 extern crate dnn_from_scratch;
-use dnn_from_scratch::classification;
 use dnn_from_scratch::loss::Loss;
 use dnn_from_scratch::neural_network::NeuralNetwork;
 use dnn_from_scratch::report::ReportData;
+use dnn_from_scratch::utils::Classification;
 use nd::Array2;
 
 mod dataset_setup;
+mod plot;
 
 pub trait Training {
     fn train(
@@ -38,9 +39,9 @@ impl Training for NeuralNetwork {
             // Training pipeline
             let output = self.forward(&x_train);
             let train_loss = loss.compute_loss(&output, &y_train);
-            let predicted_labels = classification::argmax(&output, 1);
-            let true_labels = classification::argmax(&y_train, 1);
-            let train_accuracy = classification::compute_accuracy(
+            let predicted_labels = Classification::argmax(&output, 1);
+            let true_labels = Classification::argmax(&y_train, 1);
+            let train_accuracy = Classification::compute_accuracy(
                 &predicted_labels.into_dyn(),
                 &true_labels.into_dyn(),
             );
@@ -51,9 +52,9 @@ impl Training for NeuralNetwork {
             // Testing pipeline
             let output = self.forward(&x_test);
             let test_loss = loss.compute_loss(&output, &y_test);
-            let predicted_labels = classification::argmax(&output, 1);
-            let true_labels = classification::argmax(&y_test, 1);
-            let test_accuracy = classification::compute_accuracy(
+            let predicted_labels = Classification::argmax(&output, 1);
+            let true_labels = Classification::argmax(&y_test, 1);
+            let test_accuracy = Classification::compute_accuracy(
                 &predicted_labels.into_dyn(),
                 &true_labels.into_dyn(),
             );
@@ -61,7 +62,15 @@ impl Training for NeuralNetwork {
             report_data.add(train_loss, train_accuracy, test_loss, test_accuracy);
             report_data.print_report(epoch);
         }
-        report_data.save_report(true, true);
+        // Save training history and plot losses
+        report_data.save_report("mnist_experiment_training_history.txt");
+        let (train_accuracy, test_accuracy) = report_data.get_errors();
+        plot::plot_error(
+            n_epochs,
+            train_accuracy,
+            test_accuracy,
+            "output/mnist_experiment_plot.png",
+        );
     }
 }
 

@@ -7,6 +7,7 @@ edition = "2021"
 dnn_from_scratch = { path = "dnn_from_scratch" }
 polars = { version = "0.44.2", features = ["polars-io", "ndarray"] }
 ndarray = "0.16.1"
+charming = { version = "0.4.0", features = ["ssr"]}
 
 [dependencies.ndarray-npy]
 version = "0.9.1"

@@ -1,9 +1,11 @@
 use dnn_from_scratch::loss::Loss;
 use dnn_from_scratch::neural_network::NeuralNetwork;
 use dnn_from_scratch::report::ReportData;
+use dnn_from_scratch::utils::Regression;
 use nd::Array2;
 
 mod dataset_setup;
+mod plot;
 
 pub trait Training {
     fn train(
@@ -50,7 +52,11 @@ impl Training for NeuralNetwork {
             report_data.add(train_loss, train_accuracy, test_loss, test_accuracy);
             report_data.print_report(epoch);
         }
-        report_data.save_report(false, true);
+        // Save training history and plot CDF
+        report_data.save_report("rssi_experiment_training_history.txt");
+        let predictions = self.forward(&x_test);
+        let (sorted_errors, cdf) = Regression::cumulative_distribution(&predictions, &y_test);
+        plot::plot_cdf(sorted_errors, cdf, "output/rssi_experiment_cdf.png");
     }
 }
 
@@ -58,7 +64,7 @@ pub fn run_rssi_experiment() {
     // RSSI Architecture
     const INPUT_SIZE: usize = 13;
     const OUTPUT_SIZE: usize = 2;
-    const HIDDEN_SIZES: [usize; 2] = [200, 200];
+    const HIDDEN_SIZES: [usize; 2] = [256, 256];
     // Load dataset
     let (x_train, y_train, x_test, y_test) =
         dataset_setup::load_rssi_dataset("assets/rssi/rssi-dataset.csv", 0.15);
@@ -68,5 +74,5 @@ pub fn run_rssi_experiment() {
     neural_network.add_layer(INPUT_SIZE, HIDDEN_SIZES[0], "relu");
     neural_network.add_layer(HIDDEN_SIZES[0], HIDDEN_SIZES[1], "relu");
     neural_network.add_layer(HIDDEN_SIZES[1], OUTPUT_SIZE, "relu");
-    neural_network.train(x_train, y_train, x_test, y_test, 1000, 0.001, 0.00001);
+    neural_network.train(x_train, y_train, x_test, y_test, 2500, 0.0005, 0.00001);
 }
