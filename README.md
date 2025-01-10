@@ -33,12 +33,12 @@ dnn-from-scratch/
 │   ├── Cargo.toml           # Library-specific dependencies
 │   └── src/
 │       ├── activation.rs    # Activation functions
-│       ├── fully_connected.rs # Fully connected layers
+│       ├── fully_connected.rs # Fully connected layer module
 │       ├── lib.rs           # Entry point for the library
 │       ├── loss.rs          # Loss functions
 │       ├── neural_network.rs # Neural network definition
 │       ├── report.rs        # Reporting and result output
-│       └── utils.rs         # Utility functions
+│       └── utils.rs         # Utility for regression/classification
 └── src/                     # Main application for experiments
     ├── main.rs              # Entry point for the executable
     ├── mnist_experiment/    # MNIST-related modules
