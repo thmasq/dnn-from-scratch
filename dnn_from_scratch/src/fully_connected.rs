@@ -1,13 +1,20 @@
 use crate::activation::Activation;
 use ndarray::{Array1, Array2, Axis};
-use rand::thread_rng;
+use rand::{self, rngs::StdRng, thread_rng, RngCore, SeedableRng};
 use rand_distr::{Distribution, Normal};
 
 /// Generate weights following the HE-Initialization method
-fn generate_weights(input_size: usize, output_size: usize) -> Array2<f64> {
+fn generate_weights(
+    input_size: usize,
+    output_size: usize,
+    random_seed: Option<u64>,
+) -> Array2<f64> {
     let scale = (2. / input_size as f64).sqrt();
     let normal = Normal::new(0., scale).unwrap();
-    let mut rng = thread_rng();
+    let mut rng: Box<dyn RngCore> = match random_seed {
+        Some(seed_value) => Box::new(StdRng::seed_from_u64(seed_value)),
+        None => Box::new(thread_rng()),
+    };
     Array2::from_shape_fn((input_size, output_size), |_| normal.sample(&mut rng))
 }
 
@@ -33,9 +40,14 @@ pub struct FullyConnected {
 
 impl FullyConnected {
     /// Initialize a fully-connected layer
-    pub fn new(input_size: usize, output_size: usize, activation: Activation) -> FullyConnected {
+    pub fn new(
+        input_size: usize,
+        output_size: usize,
+        activation: Activation,
+        random_seed: Option<u64>,
+    ) -> FullyConnected {
         FullyConnected {
-            weights: generate_weights(input_size, output_size),
+            weights: generate_weights(input_size, output_size, random_seed),
             biases: Array1::zeros(output_size),
             activation,
             m_weights: Array2::zeros((input_size, output_size)),

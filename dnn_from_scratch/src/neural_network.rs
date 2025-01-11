@@ -4,16 +4,20 @@ use nd::Array2;
 
 pub struct NeuralNetwork {
     layers: Vec<FullyConnected>,
+    random_seed: Option<u64>,
 }
 
 impl NeuralNetwork {
-    pub fn new() -> NeuralNetwork {
-        NeuralNetwork { layers: Vec::new() }
+    pub fn new(random_seed: Option<u64>) -> NeuralNetwork {
+        NeuralNetwork {
+            layers: Vec::new(),
+            random_seed,
+        }
     }
 
     pub fn add_layer(&mut self, input_size: usize, output_size: usize, activation: &str) {
         let activation = Activation::new(activation);
-        let new_layer = FullyConnected::new(input_size, output_size, activation);
+        let new_layer = FullyConnected::new(input_size, output_size, activation, self.random_seed);
         self.layers.push(new_layer);
     }
 

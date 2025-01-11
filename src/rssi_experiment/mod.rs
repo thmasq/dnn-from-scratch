@@ -70,7 +70,8 @@ pub fn run_rssi_experiment() {
         dataset_setup::load_rssi_dataset("assets/rssi/rssi-dataset.csv", 0.15);
     println!("RSSI dataset successfully loaded");
     // Neural Network pipeline
-    let mut neural_network = NeuralNetwork::new();
+    let random_seed = Some(42); // For reproducibility
+    let mut neural_network = NeuralNetwork::new(random_seed);
     neural_network.add_layer(INPUT_SIZE, HIDDEN_SIZES[0], "relu");
     neural_network.add_layer(HIDDEN_SIZES[0], HIDDEN_SIZES[1], "relu");
     neural_network.add_layer(HIDDEN_SIZES[1], OUTPUT_SIZE, "relu");
